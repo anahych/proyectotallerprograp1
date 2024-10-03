@@ -1,0 +1,516 @@
+import javax.swing.*;// Este import trae todas las clases de la biblioteca Swing para crear interfaces gráficas de usuario.
+import java.awt.*; // Este import trae todas las clases del paquete AWT para manejar gráficos y layouts.
+import java.awt.event.ActionEvent;// Este import trae la clase ActionEvent para representar eventos de acción (como clics).
+import java.awt.event.ActionListener;// Este import trae la interfaz ActionListener para manejar eventos de acción.
+import java.io.*;// Este import trae todas las clases relacionadas con la entrada y salida (I/O) de datos.
+import java.util.HashMap;// Este import trae la clase HashMap, que implementa un mapa para almacenar pares clave-valor.
+import java.util.Map;// Este import trae la interfaz Map, que define la estructura de un mapa en Java.
+
+public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame para crear una ventana de aplicación.
+
+    private JTextField usuarioField;// Campo de texto para que el usuario ingrese su nombre de usuario.
+    private JPasswordField contraseñaField;// Campo de texto para que el usuario ingrese su contraseña, enmascarando el texto.
+    private static Map<String, Usuario> usuarios = new HashMap<>(); // Mapa estático que almacena objetos Usuario, con el nombre de usuario como clave.
+    private Usuario usuarioActual;// Variable que almacena el usuario actualmente autenticado en la sesión.
+
+    public BancoLogix() { // Constructor de la clase BancoLogix.
+        setTitle("Banco Logix"); // Establece el título de la ventana a "Banco Logix".
+        setSize(400, 300);// Establece el tamaño de la ventana a 400 píxeles de ancho y 300 píxeles de alto.
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// Establece la operación predeterminada al cerrar la ventana para salir de la aplicación.
+        setLocationRelativeTo(null);// Centra la ventana en la pantalla.
+        setLayout(null);// Establece el layout de la ventana como nulo, permitiendo el posicionamiento absoluto de los componentes.
+
+        cargarUsuarios();
+
+        // Panel superior
+        JPanel panelSuperior = new JPanel();
+        panelSuperior.setBackground(new Color(0, 0, 128));
+        panelSuperior.setBounds(0, 0, 400, 60);
+        panelSuperior.setLayout(null);
+
+        JLabel etiquetaBienvenida = new JLabel("BIENVENIDO");
+        etiquetaBienvenida.setForeground(Color.YELLOW);
+        etiquetaBienvenida.setFont(new Font("Arial", Font.BOLD, 18));
+        etiquetaBienvenida.setBounds(150, 5, 200, 20);
+        panelSuperior.add(etiquetaBienvenida);
+
+        JLabel etiquetaBanco = new JLabel("BANCO LOGIX");
+        etiquetaBanco.setForeground(Color.YELLOW);
+        etiquetaBanco.setFont(new Font("Arial", Font.BOLD, 18));
+        etiquetaBanco.setBounds(142, 30, 200, 20);
+        panelSuperior.add(etiquetaBanco);
+
+        add(panelSuperior);
+
+        // Campos de texto y etiquetas
+        JLabel usuarioLabel = new JLabel("Usuario:");
+        usuarioLabel.setBounds(50, 80, 100, 25);
+        add(usuarioLabel);
+
+        usuarioField = new JTextField();
+        usuarioField.setBounds(150, 80, 150, 25);
+        add(usuarioField);
+
+        JLabel contraseñaLabel = new JLabel("Contraseña:");
+        contraseñaLabel.setBounds(50, 120, 100, 25);
+        add(contraseñaLabel);
+
+        contraseñaField = new JPasswordField();
+        contraseñaField.setBounds(150, 120, 150, 25);
+        add(contraseñaField);
+
+        // Botones
+        JButton ingresarButton = new JButton("Ingresar");
+        ingresarButton.setBounds(50, 170, 100, 25);
+        add(ingresarButton);
+
+        JButton registrarButton = new JButton("Registrar");
+        registrarButton.setBounds(160, 170, 100, 25);
+        add(registrarButton);
+
+        JButton salirButton = new JButton("Salir");
+        salirButton.setBounds(270, 170, 100, 25);
+        add(salirButton);
+
+        // Funcionalidad de los botones
+        ingresarButton.addActionListener(e -> ingresar());
+
+        registrarButton.addActionListener(e -> registrar());
+
+        salirButton.addActionListener(e -> System.exit(0));
+    }
+
+    private void cargarUsuarios() { // Método privado para cargar usuarios desde un archivo.
+        try (BufferedReader reader = new BufferedReader(new FileReader("usuarios.txt"))) { // Crea un BufferedReader para leer el archivo "usuarios.txt".
+            String linea; // Variable para almacenar cada línea leída del archivo.
+            while ((linea = reader.readLine()) != null) { // Lee líneas del archivo hasta que no haya más (null)
+                String[] datos = linea.split(",");// Divide la línea en partes usando la coma como delimitador.
+                String nombreUsuario = datos[0];// Asigna el primer elemento como el nombre de usuario.
+                String contraseña = datos[1];// Asigna el segundo elemento como la contraseña.
+                double saldo = Double.parseDouble(datos[2]);// Convierte el tercer elemento a un tipo double para el saldo.
+                String numeroCuenta = datos[3];// Asigna el cuarto elemento como el número de cuenta.
+                Usuario usuario = new Usuario(nombreUsuario, contraseña, saldo, numeroCuenta);// Crea un objeto Usuario con los datos leídos.
+                usuarios.put(nombreUsuario, usuario);
+            }
+        } catch (IOException e) { // Captura cualquier excepción de entrada/salida que ocurra durante la lectura del archivo.
+            JOptionPane.showMessageDialog(this, "Error al cargar usuarios");// Muestra un cuadro de diálogo con un mensaje de error si ocurre una excepción.
+        }
+    }
+    //Metodo para registrar
+    private void registrar() {
+        String nuevoUsuario = JOptionPane.showInputDialog(this, "Ingrese nuevo nombre de usuario:");// Solicita al usuario un nuevo nombre de usuario.
+        if (nuevoUsuario == null || nuevoUsuario.isEmpty()) {// Verifica si el usuario ingresó un nombre.
+            return;
+        }
+        if (usuarios.containsKey(nuevoUsuario)) { // Comprueba si el nombre de usuario ya existe en el mapa de usuarios.
+            JOptionPane.showMessageDialog(this, "El usuario ya existe. Intente con otro nombre."); // Muestra un mensaje si el usuario ya existe.
+            return;
+        }
+        String nuevaContraseña = JOptionPane.showInputDialog(this, "Ingrese una contraseña:");// Solicita al usuario una nueva contraseña.
+        if (nuevaContraseña == null || nuevaContraseña.isEmpty()) {  // Verifica si se ingresó una contraseña.
+            return;
+        }
+
+        String numeroCuenta = generarNumeroCuenta(); // Genera un nuevo número de cuenta.
+        double saldoInicial = 0.0;// Establece el saldo inicial del nuevo usuario en 0.0.
+
+        Usuario nuevoUsuarioObj = new Usuario(nuevoUsuario, nuevaContraseña, saldoInicial, numeroCuenta);// Crea un nuevo objeto Usuario con los datos ingresados.
+        usuarios.put(nuevoUsuario, nuevoUsuarioObj);// Agrega el nuevo usuario al mapa de usuarios.
+
+        guardarUsuarioEnArchivo(nuevoUsuarioObj);// Llama a un método para guardar el nuevo usuario en un archivo.
+        crearArchivoHistorial(nuevoUsuarioObj);// Llama a un método para crear un archivo de historial para el nuevo usuario.
+
+        JOptionPane.showMessageDialog(this, "Usuario registrado exitosamente. Su número de cuenta es: " + numeroCuenta);// Muestra un mensaje de éxito al registrar al usuario
+    }
+
+    private void crearArchivoHistorial(Usuario usuario) { // Método privado para crear un archivo de historial para un usuario.
+        try (FileWriter writer = new FileWriter("historial_" + usuario.getNombreUsuario() + ".txt", true)) { // Crea un FileWriter para un archivo llamado "historial_[nombre_usuario].txt", en modo de adición.
+            writer.write("Historial de transacciones de " + usuario.getNombreUsuario() + "\n");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al crear el historial del usuario");// Muestra un mensaje de error si ocurre una excepción.
+        }
+    }
+
+    private void guardarUsuarioEnArchivo(Usuario usuario) { // Método privado para guardar un usuario en el archivo "usuarios.txt".
+        try (FileWriter writer = new FileWriter("usuarios.txt", true)) { // Crea un FileWriter para "usuarios.txt" en modo de adición.
+            writer.write(usuario.getNombreUsuario() + "," + usuario.getContraseña() + "," + usuario.getSaldo() + "," + usuario.getNumeroCuenta() + "\n");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar el usuario");
+        }
+    }
+
+    private void guardarTodosLosUsuarios() { // Método privado para guardar todos los usuarios en el archivo "usuarios.txt".
+        try (FileWriter writer = new FileWriter("usuarios.txt")) { 
+            for (Usuario usuario : usuarios.values()) { // Itera sobre los valores (usuarios) del mapa de usuarios.
+                writer.write(usuario.getNombreUsuario() + "," + usuario.getContraseña() + "," + usuario.getSaldo() + "," + usuario.getNumeroCuenta() + "\n");
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar los usuarios");
+        }
+    }
+
+    private String generarNumeroCuenta() { // Método privado para generar un número de cuenta aleatorio.
+        return String.valueOf((int) (Math.random() * 900000000) + 100000000);// crea digitos aleatorios 
+    }
+
+    private void ingresar() { // Método privado para manejar el ingreso de un usuario.
+        String usuario = usuarioField.getText();// Obtiene el texto ingresado en el campo de usuario.
+        String contraseña = new String(contraseñaField.getPassword()); // Obtiene la contraseña ingresada en el campo de contraseña.
+
+        if (usuarios.containsKey(usuario)) { // Verifica si el usuario existe en el mapa de usuarios.
+            Usuario usuarioObj = usuarios.get(usuario);// Recupera el objeto Usuario correspondiente al nombre de usuario.
+            if (usuarioObj.getContraseña().equals(contraseña)) {// Comprueba si la contraseña ingresada coincide con la del usuario.
+                usuarioActual = usuarioObj;// Establece el usuario actual como el que se ha autenticado.
+                abrirMenuPrincipal();
+            } else { 
+                JOptionPane.showMessageDialog(this, "Contraseña incorrecta"); // Muestra un mensaje si la contraseña es incorrecta.
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Usuario no encontrado"); // Muestra un mensaje si el usuario no existe.
+        }
+    }
+    //Metodo para abrir el menu principal
+    private void abrirMenuPrincipal() {
+        getContentPane().removeAll();
+        repaint();
+        setTitle("Banco Logix - Menú Principal");
+        setSize(400, 420);
+
+        JLabel usuarioInfo = new JLabel("Usuario: " + usuarioActual.getNombreUsuario());
+        usuarioInfo.setBounds(50, 0, 150, 25);
+        add(usuarioInfo);
+
+        JLabel numeroDeCuenta = new JLabel("N de Cuenta: " + usuarioActual.getNumeroCuenta());
+        numeroDeCuenta.setBounds(50, 20, 150, 25);
+        add(numeroDeCuenta);
+
+        JButton consultarSaldoButton = new JButton("Consultar saldo");
+        consultarSaldoButton.setBounds(50, 80, 150, 30);
+        add(consultarSaldoButton);
+
+        JButton depositarButton = new JButton("Depositar dinero");
+        depositarButton.setBounds(50, 120, 150, 30);
+        add(depositarButton);
+
+        JButton retirarButton = new JButton("Retirar dinero");
+        retirarButton.setBounds(50, 160, 150, 30);
+        add(retirarButton);
+
+
+        JButton transferirButton = new JButton("Transferir dinero");
+        transferirButton.setBounds(50, 200, 150, 30);
+        add(transferirButton);
+
+
+        JButton verHistorialButton = new JButton("Ver Historial");
+        verHistorialButton.setBounds(50, 240, 150, 30);
+        add(verHistorialButton);
+
+        JButton salirButton = new JButton("Salir");
+        salirButton.setBounds(150, 320, 100, 30);
+        add(salirButton);
+
+        salirButton.addActionListener(e -> System.exit(0));
+
+        consultarSaldoButton.addActionListener(e ->abrirVentanaSaldo());
+
+        depositarButton.addActionListener(e -> abrirVentanaDepositar());
+
+        retirarButton.addActionListener(e -> abrirVentanaRetirar());
+
+        transferirButton.addActionListener(e -> abrirVentanaTransferencia());
+
+        verHistorialButton.addActionListener(e -> abrirVentanaHistorial());
+    }
+
+    // Método para abrir la nueva ventana de saldo
+    private void abrirVentanaSaldo() { // Método privado para configurar y mostrar el menú principal de la aplicación.
+        JFrame saldoFrame = new JFrame("Consulta de Saldo");// Elimina todos los componentes actuales de la ventana.
+        saldoFrame.setSize(400, 200);// Redibuja la ventana para reflejar los cambios.
+        saldoFrame.setLocationRelativeTo(this);// Establece el título de la ventana al menú principal.
+        saldoFrame.setLayout(null);// Ajusta el tamaño de la ventana.
+
+        JLabel saldoLabel = new JLabel("Consulta de Saldo");// Crea una etiqueta con el nombre del usuario actual.
+        saldoLabel.setForeground(new Color(255, 69, 0)); // Naranja
+        saldoLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        saldoLabel.setBounds(80, 5, 200, 30);
+        // Crea un botón para consultar saldo y establece su posición y tamaño.
+        JLabel saldoMontoLabel = new JLabel("Saldo disponible: " + usuarioActual.getSaldo() + " Bs.");
+        saldoMontoLabel.setBounds(110, 60, 200, 25);
+        saldoFrame.add(saldoMontoLabel);
+        // Crea un botón para atras  y establece su posición y tamaño.
+        JButton atrasButton = new JButton("Atrás");
+        atrasButton.setBounds(150, 120, 100, 30);
+        saldoFrame.add(atrasButton);
+          // Crea un botón para atras y establece su posición y tamaño.
+        atrasButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saldoFrame.dispose(); // Cierra la ventana de saldo
+            }
+        });
+
+        saldoFrame.setVisible(true);
+    }
+
+    //Metodo para abrir la ventana de depositar
+    //Metodo para abrir la ventana de depositar
+
+    private void abrirVentanaDepositar() {// Método que abre la ventana para depositar dinero
+        JFrame ventanaDeposito = new JFrame("Depositar Dinero");// Crea una nueva ventana con el título "Depositar Dinero"
+        ventanaDeposito.setSize(400, 200);// Establece el tamaño de la ventana a 400x200 píxeles
+        ventanaDeposito.setLocationRelativeTo(this);// Centra la ventana en relación a la ventana actual
+        ventanaDeposito.setLayout(null);// Establece el diseño de la ventana a null, permitiendo el posicionamiento manual de los componentes
+
+        JLabel cantidadLabel = new JLabel("Cantidad a depositar:"); // Crea una etiqueta para solicitar la cantidad a depositar
+        cantidadLabel.setBounds(50, 30, 150, 25);// Establece la posición y el tamaño de la etiqueta
+        ventanaDeposito.add(cantidadLabel);// Agrega la etiqueta a la ventana
+
+        JTextField cantidadField = new JTextField();// Crea un campo de texto para que el usuario ingrese la cantidad
+        cantidadField.setBounds(140, 60, 150, 25);// Establece la posición y el tamaño del campo de texto
+        ventanaDeposito.add(cantidadField);// Agrega el campo de texto a la ventana
+
+        JButton atrasButton = new JButton("Atrás");// Crea un botón que permite volver a la ventana anterior
+        atrasButton.setBounds(240, 100, 100, 25);// Establece la posición y el tamaño del botón
+        ventanaDeposito.add(atrasButton);
+        //// Añade un ActionListener al botón para cerrar la ventana al hacer clic
+
+        atrasButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ventanaDeposito.dispose(); // Cierra la ventana de saldo
+            }
+        });
+        JButton confirmarButton = new JButton("Confirmar");// Crea un botón para confirmar el depósito
+        confirmarButton.setBounds(80, 100, 100, 25);// Establece la posición y el tamaño del botón
+        ventanaDeposito.add(confirmarButton);// Agrega el botón a la ventana
+        // Añade un ActionListener al botón de confirmar
+
+        confirmarButton.addActionListener(e -> {
+            double cantidad = Double.parseDouble(cantidadField.getText());// Intenta convertir el texto ingresado en un número decimal
+            usuarioActual.depositar(cantidad);// Llama al método depositar con la cantidad ingresada
+            guardarTodosLosUsuarios();// Guarda todos los usuarios después del depósito
+            registrarHistorial(usuarioActual, "Depósito", cantidad);// Registra el historial de la transacción de depósito
+            ventanaDeposito.dispose();// Cierra la ventana de depósito
+        });
+
+        ventanaDeposito.setVisible(true); // Muestra la ventana de depósito
+    }
+
+    //Metodo para abrir la ventana de retiro
+    private void abrirVentanaRetirar() {
+        JFrame ventanaRetiro = new JFrame("Retirar Dinero"); // Crea una nueva ventana titulada "Retirar Dinero".
+        ventanaRetiro.setSize(400, 200);// Establece el tamaño de la ventana.
+        ventanaRetiro.setLocationRelativeTo(this);
+        ventanaRetiro.setLayout(null);
+
+        JLabel cantidadLabel = new JLabel("Cantidad a retirar:");// Crea una etiqueta para solicitar la cantidad a retirar.
+        cantidadLabel.setBounds(50, 30, 150, 25);
+        ventanaRetiro.add(cantidadLabel);
+
+        JTextField cantidadField = new JTextField();
+        cantidadField.setBounds(140, 60, 150, 25);
+        ventanaRetiro.add(cantidadField);
+
+        JButton atrasButton = new JButton("Atrás");// Crea un botón para regresar
+        atrasButton.setBounds(240, 100, 100, 25);
+        ventanaRetiro.add(atrasButton);
+
+        atrasButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ventanaRetiro.dispose(); // Cierra la ventana de saldo
+            }
+        });
+        
+
+        JButton confirmarButton = new JButton("Confirmar");// Crea un botón para confirmar el retiro.
+        confirmarButton.setBounds(80, 100, 100, 25);
+        ventanaRetiro.add(confirmarButton);
+        // Establece un ActionListener para el botón "Confirmar".
+        confirmarButton.addActionListener(e -> {
+            double cantidad = Double.parseDouble(cantidadField.getText()); // Obtiene la cantidad ingresada y la convierte a double.
+            if (cantidad <= usuarioActual.getSaldo()) { // Verifica si hay suficiente saldo para retirar.
+                usuarioActual.retirar(cantidad);// Realiza el retiro.
+                guardarTodosLosUsuarios(); // Guarda los datos de todos los usuarios después del retiro.
+                registrarHistorial(usuarioActual, "Retiro", cantidad);// Registra la transacción en el historial.
+                ventanaRetiro.dispose();
+            } else {
+                JOptionPane.showMessageDialog(ventanaRetiro, "Saldo insuficiente");// Muestra un mensaje de error si el saldo es insuficiente.
+            }
+        });
+
+        ventanaRetiro.setVisible(true);// Hace visible la ventana de retiro.
+    }
+
+    // Método para abrir la ventana de transferencia
+    private void abrirVentanaTransferencia() {
+        JFrame ventanaTransferencia = new JFrame("Transferir Dinero");// Crea una nueva ventana titulada "Transferir Dinero"
+        ventanaTransferencia.setSize(400, 300);// Establece el tamaño de la ventana.
+        ventanaTransferencia.setLocationRelativeTo(this);
+        ventanaTransferencia.setLayout(null);
+    
+        JLabel cuentaDestinoLabel = new JLabel("Número de cuenta destino:");// Crea una etiqueta para solicitar el número de cuenta destino.
+        cuentaDestinoLabel.setBounds(50, 30, 180, 25);
+        ventanaTransferencia.add(cuentaDestinoLabel);
+    
+        JTextField cuentaDestinoField = new JTextField();// Crea un campo de texto para ingresar el número de cuenta destino.
+        cuentaDestinoField.setBounds(140, 60, 150, 25);
+        ventanaTransferencia.add(cuentaDestinoField);
+    
+        JLabel cantidadLabel = new JLabel("Cantidad a transferir:");// Crea una etiqueta para solicitar la cantidad a transferir.
+        cantidadLabel.setBounds(50, 100, 150, 25);
+        ventanaTransferencia.add(cantidadLabel);
+    
+        JTextField cantidadField = new JTextField();// Crea un campo de texto para ingresar la cantidad a transferir.
+        cantidadField.setBounds(140, 130, 150, 25);
+        ventanaTransferencia.add(cantidadField);
+    
+        JButton atrasButton = new JButton("Atrás");// Crea un botón para regresar.
+        atrasButton.setBounds(240, 200, 100, 25);
+        ventanaTransferencia.add(atrasButton);
+    
+        JButton confirmarButton = new JButton("Confirmar");// Crea un botón para confirmar la transferencia.
+        confirmarButton.setBounds(80, 200, 100, 25);
+        ventanaTransferencia.add(confirmarButton);
+        // Establece un ActionListener para el botón "Atrás" que cierra la ventana de transferencia.
+        atrasButton.addActionListener(e -> ventanaTransferencia.dispose());
+         // Establece un ActionListener para el botón "Confirmar".
+        confirmarButton.addActionListener(e -> {
+            String numeroCuentaDestino = cuentaDestinoField.getText();
+    
+            // Verificar si el número de cuenta destino existe
+            Usuario destinatario = buscarUsuarioPorNumeroCuenta(numeroCuentaDestino);
+            if (destinatario == null) {
+                JOptionPane.showMessageDialog(ventanaTransferencia, "El número de cuenta destino no existe.");
+                return;
+            }
+    
+            double cantidad;
+            try {
+                cantidad = Double.parseDouble(cantidadField.getText());
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(ventanaTransferencia, "Ingrese una cantidad válida.");// Muestra un mensaje de error si la cantidad no es válida.
+                return;
+            }
+    
+            // Verificar si el saldo es suficiente
+            if (cantidad <= usuarioActual.getSaldo()) { // Si hay suficiente saldo.
+            // Realiza la transferencia.
+
+                // Realizar la transferencia
+                usuarioActual.retirar(cantidad);
+                destinatario.depositar(cantidad);
+    
+                // Guardar los cambios de ambos usuarios
+                guardarTodosLosUsuarios();
+    
+                // Registrar en el historial del usuario actual y del destinatario
+                registrarHistorial(usuarioActual, "Transferencia a cuenta " + destinatario.getNumeroCuenta(), cantidad);
+                registrarHistorial(destinatario, "Transferencia recibida de cuenta " + usuarioActual.getNumeroCuenta(), cantidad);
+    
+                JOptionPane.showMessageDialog(ventanaTransferencia, "Transferencia realizada con éxito.");
+                ventanaTransferencia.dispose();
+            } else {
+                JOptionPane.showMessageDialog(ventanaTransferencia, "Saldo insuficiente.");// Muestra un mensaje de error si el saldo es insuficiente.
+            }
+        });
+    
+        ventanaTransferencia.setVisible(true);
+    }
+    
+    private Usuario buscarUsuarioPorNumeroCuenta(String numeroCuenta) { // Método privado para buscar un usuario por su número de cuenta.
+        for (Usuario usuario : usuarios.values()) {
+            if (usuario.getNumeroCuenta().equals(numeroCuenta)) {
+                return usuario;// Si coincide, devuelve el objeto Usuario encontrado.
+            }
+        }
+        return null; // Si no se encuentra un usuario con ese número de cuenta
+    }
+    
+    //Metodo para abrir la ventana de historial
+    //Metodo para abrir la ventana de historial
+    private void abrirVentanaHistorial() {
+        JFrame ventanaHistorial = new JFrame("Historial de Transacciones");// Crea una nueva ventana con el título "Historial de Transacciones"
+        ventanaHistorial.setSize(500, 400);// Establece el tamaño de la ventana a 500x400 píxeles
+        ventanaHistorial.setLocationRelativeTo(this);// Centra la ventana en relación a la ventana actual
+        ventanaHistorial.setLayout(new BorderLayout());// Establece un diseño de BorderLayout para la ventana
+
+        JTextArea historialArea = new JTextArea();// Crea un área de texto para mostrar el historial de transacciones
+        JScrollPane scrollPane = new JScrollPane(historialArea); // Agrega una barra de desplazamiento al área de texto
+        ventanaHistorial.add(scrollPane, BorderLayout.CENTER);// Añade el JScrollPane al centro de la ventana
+
+    // Botón para cerrar la ventana de historial
+    JButton cerrarButton = new JButton("Cerrar");// Crea un botón para cerrar la ventana
+    cerrarButton.setBounds(200, 320, 100, 30); // Establece un tamaño preferido para el botón
+    ventanaHistorial.add(cerrarButton, BorderLayout.SOUTH);// Añade el botón en la parte inferior de la ventana 
+    cerrarButton.addActionListener(e -> ventanaHistorial.dispose()); // Cierra la ventana al hacer clic en el botón
+
+    // Lee el historial de transacciones desde un archivo
+        try (BufferedReader reader = new BufferedReader(new FileReader("historial_" + usuarioActual.getNombreUsuario() + ".txt"))) {
+            String linea;
+            StringBuilder historial = new StringBuilder();// Utiliza StringBuilder para construir el historial
+            while ((linea = reader.readLine()) != null) {
+                historial.append(linea).append("\n");// Agrega cada línea leída al historial
+            }
+            historialArea.setText(historial.toString());// Establece el texto del área de historial
+        } catch (IOException e) {
+            historialArea.setText("Error al leer el historial");// Muestra un mensaje de error en caso de excepciones
+        }
+
+        ventanaHistorial.setVisible(true);// Muestra la ventana de historial
+    }
+    // Método para registrar transacciones en el historial
+    private void registrarHistorial(Usuario usuario, String tipoTransaccion, double cantidad) {
+        try (FileWriter writer = new FileWriter("historial_" + usuario.getNombreUsuario() + ".txt", true)) {
+            // Escribe la transacción en el archivo, con tipo, cantidad y saldo actual
+            writer.write(tipoTransaccion + ": " + cantidad + " Bs. - Saldo actual: " + usuario.getSaldo() + " Bs.\n");
+        } catch (IOException e) {
+            // Muestra un mensaje de error si ocurre un problema al registrar el historial
+            JOptionPane.showMessageDialog(this, "Error al registrar historial");
+        }
+    }
+
+    public static class Usuario {
+        private String nombreUsuario;// Atributo para almacenar el nombre de usuario.
+        private String contraseña;// Atributo para almacenar la contraseña del usuario.
+        private double saldo;// Atributo para almacenar el saldo del usuario.
+        private String numeroCuenta;// Atributo para almacenar el número de cuenta del usuario.
+        // Constructor que inicializa los atributos de la clase Usuario.
+        public Usuario(String nombreUsuario, String contraseña, double saldo, String numeroCuenta) {
+            this.nombreUsuario = nombreUsuario;// Inicializa el nombre de usuario.
+            this.contraseña = contraseña;// Inicializa la contraseña.
+            this.saldo = saldo;// Inicializa el saldo.
+            this.numeroCuenta = numeroCuenta;
+        }
+        // Método para obtener el nombre de usuario.
+        public String getNombreUsuario() {
+            return nombreUsuario;
+        }
+         // Método para obtener la contraseña del usuario.
+        public String getContraseña() {
+            return contraseña;
+        }
+        // Método para obtener el saldo del usuario.
+        public double getSaldo() {
+            return saldo;
+        }
+        // Método para obtener el número de cuenta del usuario.
+        public String getNumeroCuenta() {
+            return numeroCuenta;
+        }
+        // Método para depositar una cantidad al saldo.
+        public void depositar(double cantidad) {
+            saldo += cantidad;
+        }
+        // Método para retirar una cantidad del saldo.
+        public void retirar(double cantidad) {
+            saldo -= cantidad;
+        }
+    }
+
+    public static void main(String[] args) {
+        BancoLogix ventana = new BancoLogix();
+        ventana.setVisible(true);// Hace visible la ventana de la aplicación.
+    }
+}
