@@ -6,14 +6,23 @@ import java.io.*;// Este import trae todas las clases relacionadas con la entrad
 import java.util.HashMap;// Este import trae la clase HashMap, que implementa un mapa para almacenar pares clave-valor.
 import java.util.Map;// Este import trae la interfaz Map, que define la estructura de un mapa en Java.
 
+/**
+ * Esta clase maneja la interfaz de usuario y la lógica de registro e inicio de sesión.
+ */
+
 public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame para crear una ventana de aplicación.
 
     private JTextField usuarioField;// Campo de texto para que el usuario ingrese su nombre de usuario.
     private JPasswordField contraseñaField;// Campo de texto para que el usuario ingrese su contraseña, enmascarando el texto.
     private static Map<String, Usuario> usuarios = new HashMap<>(); // Mapa estático que almacena objetos Usuario, con el nombre de usuario como clave.
-    private Usuario usuarioActual;// Variable que almacena el usuario actualmente autenticado en la sesión.
+    private Usuario usuarioActual;// Variable que almacena el usuario actualmente autenticado en la sesión
 
-    public BancoLogix() { // Constructor de la clase BancoLogix.
+     /**
+     * Constructor de la clase BancoLogix.
+     * Inicializa la ventana y carga los usuarios existentes.
+     */
+
+        public BancoLogix() { // Constructor de la clase BancoLogix.
         setTitle("Banco Logix"); // Establece el título de la ventana a "Banco Logix".
         setSize(400, 300);// Establece el tamaño de la ventana a 400 píxeles de ancho y 300 píxeles de alto.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// Establece la operación predeterminada al cerrar la ventana para salir de la aplicación.
@@ -79,6 +88,10 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
 
         salirButton.addActionListener(e -> System.exit(0));
     }
+     /**
+     * Carga los usuarios desde un archivo de texto.
+     * Cada línea del archivo debe contener el nombre de usuario, contraseña, saldo y número de cuenta.
+     */
 
     private void cargarUsuarios() { // Método privado para cargar usuarios desde un archivo.
         try (BufferedReader reader = new BufferedReader(new FileReader("usuarios.txt"))) { // Crea un BufferedReader para leer el archivo "usuarios.txt".
@@ -96,8 +109,12 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
             JOptionPane.showMessageDialog(this, "Error al cargar usuarios");// Muestra un cuadro de diálogo con un mensaje de error si ocurre una excepción.
         }
     }
-    //Metodo para registrar
-    private void registrar() {
+
+   /**
+     * Registra un nuevo usuario en la aplicación.
+     * Solicita al usuario un nombre de usuario y contraseña, y lo guarda en el archivo de usuarios.
+     */
+       private void registrar() {
         String nuevoUsuario = JOptionPane.showInputDialog(this, "Ingrese nuevo nombre de usuario:");// Solicita al usuario un nuevo nombre de usuario.
         if (nuevoUsuario == null || nuevoUsuario.isEmpty()) {// Verifica si el usuario ingresó un nombre.
             return;
@@ -123,6 +140,11 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
         JOptionPane.showMessageDialog(this, "Usuario registrado exitosamente. Su número de cuenta es: " + numeroCuenta);// Muestra un mensaje de éxito al registrar al usuario
     }
 
+   /**
+     * Crea un archivo de historial de transacciones para un usuario.
+     *
+     * @param usuario El usuario para el cual se crea el historial.
+     */
     private void crearArchivoHistorial(Usuario usuario) { // Método privado para crear un archivo de historial para un usuario.
         try (FileWriter writer = new FileWriter("historial_" + usuario.getNombreUsuario() + ".txt", true)) { // Crea un FileWriter para un archivo llamado "historial_[nombre_usuario].txt", en modo de adición.
             writer.write("Historial de transacciones de " + usuario.getNombreUsuario() + "\n");
@@ -131,6 +153,11 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
         }
     }
 
+    /**
+     * Guarda la información de un usuario en el archivo de usuarios.
+     *
+     * @param usuario El usuario que se desea guardar.
+     */
     private void guardarUsuarioEnArchivo(Usuario usuario) { // Método privado para guardar un usuario en el archivo "usuarios.txt".
         try (FileWriter writer = new FileWriter("usuarios.txt", true)) { // Crea un FileWriter para "usuarios.txt" en modo de adición.
             writer.write(usuario.getNombreUsuario() + "," + usuario.getContraseña() + "," + usuario.getSaldo() + "," + usuario.getNumeroCuenta() + "\n");
@@ -153,6 +180,10 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
         return String.valueOf((int) (Math.random() * 900000000) + 100000000);// crea digitos aleatorios 
     }
 
+    /**
+     * Inicia sesión en la aplicación.
+     * Verifica las credenciales del usuario e inicia la sesión si son correctas.
+     */
     private void ingresar() { // Método privado para manejar el ingreso de un usuario.
         String usuario = usuarioField.getText();// Obtiene el texto ingresado en el campo de usuario.
         String contraseña = new String(contraseñaField.getPassword()); // Obtiene la contraseña ingresada en el campo de contraseña.
@@ -470,7 +501,10 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
             JOptionPane.showMessageDialog(this, "Error al registrar historial");
         }
     }
-
+    
+    /**
+    * Clase que representa un usuario en el sistema bancario.
+    */
     public static class Usuario {
         private String nombreUsuario;// Atributo para almacenar el nombre de usuario.
         private String contraseña;// Atributo para almacenar la contraseña del usuario.
@@ -503,7 +537,11 @@ public class BancoLogix extends JFrame { // La clase BancoLogix extiende JFrame 
         public void depositar(double cantidad) {
             saldo += cantidad;
         }
-        // Método para retirar una cantidad del saldo.
+        /**
+        * Retira una cantidad del saldo del usuario.
+        *
+        * @param cantidad Cantidad a retirar.
+        */
         public void retirar(double cantidad) {
             saldo -= cantidad;
         }
